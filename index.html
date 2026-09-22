@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Webchat - Sucursal Virtual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Contenedor del Iframe del Chat */
+        #chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            height: 600px;
+            display: none; /* Inicia oculto */
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 9999;
+        }
+
+        #chat-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sucursal Virtual</h1>
+        <p>Selecciona una opción para iniciar la consulta:</p>
+        
+        <div class="buttons-container">
+            <!-- Cada botón pasa un parámetro de negocio diferente -->
+            <button onclick="abrirChat('solicitud_bajas')">Solicitud de Bajas</button>
+            <button onclick="abrirChat('facturacion')">Detalles de Facturación</button>
+            <button onclick="abrirChat('soporte_tecnico')">Soporte Técnico</button>
+        </div>
+    </div>
+
+    <!-- Contenedor flotante para el Chat -->
+    <div id="chat-container">
+        <iframe id="chat-iframe" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN BASE DEL CHAT
+        const CHAT_BASE_URL = "https://ychat.ysocial.net/bbc7dfa021bea78f2249d0f163c2ee82e6a95744/730ea17b7d1d4e18b87a1b387a2f1982/chat_auths"; // Reemplaza por la URL real de tu proveedor
+        const CODIGO_USUARIO = "USR_12345"; // ID del usuario simulado
+
+        const chatContainer = document.getElementById('chat-container');
+        const chatIframe = document.getElementById('chat-iframe');
+
+        function abrirChat(datosDeNegocio) {
+            // Construye la URL con la QueryString necesaria
+            const nuevaUrl = `${CHAT_BASE_URL}?codigo_usuario=${CODIGO_USUARIO}&datos_de_negocio=${datosDeNegocio}&headerbuttons=1`;
+
+            // 1. Si el chat ya está desplegado, enviamos 'close' vía postMessage para reiniciar la sesión anterior
+            if (chatContainer.style.display === "block" && chatIframe.contentWindow) {
+                chatIframe.contentWindow.postMessage('close', '*');
+            }
+
+            // 2. Cargamos la nueva URL con el nuevo parámetro de negocio
+            setTimeout(() => {
+                chatIframe.src = nuevaUrl;
+                chatContainer.style.display = "block";
+            }, 200);
+        }
+
+        // 3. Escuchar los eventos emitidos DESDE el chat (cuando el usuario presiona X o Minimizar dentro del chat)
+        window.addEventListener("message", function(event) {
+            // Si el chat avisa que el usuario presionó la 'X' para cerrar
+            if (event.data === 'close') {
+                chatContainer.style.display = "none";
+                chatIframe.src = "about:blank"; // Limpia el iframe
+            }
+            
+            // Si el chat avisa que el usuario minimizó
+            if (event.data === 'minimize') {
+                chatContainer.style.height = "60px"; // Ejemplo para minimizar altura
+            }
+
+            // Si el chat avisa que el usuario maximizó
+            if (event.data === 'maximize') {
+                chatContainer.style.height = "600px";
+            }
+        });
+    </script>
+</body>
+</html>
