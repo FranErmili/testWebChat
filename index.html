@@ -50,9 +50,9 @@
             // 2. PAUSA E INYECCIÓN (Recrear la sesión limpia)
             // Esperamos 300ms para asegurar que el navegador procesó la destrucción del DOM
             setTimeout(() => {
-                const businessData = JSON.stringify({
+                const businessData = {
                     boton: departamento
-                });
+                };
 
                 const script = document.createElement('script');
                 script.src = "https://chat.ysocial.net/js/embed.js";
