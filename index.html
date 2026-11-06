@@ -3,104 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de Webchat - Sucursal Virtual</title>
+    <title>Webchat Dinámico - embed.js</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
-
-        .container {
-            text-align: center;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Contenedor del Iframe del Chat */
-        #chat-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 380px;
-            height: 600px;
-            display: none; /* Inicia oculto */
-            border: none;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 9999;
-        }
-
-        #chat-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f4f6f8; }
+        .container { text-align: center; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .buttons-container { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
+        button { padding: 12px 20px; font-size: 15px; font-weight: bold; color: #fff; background-color: #007bff; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Sucursal Virtual</h1>
-        <p>Selecciona una opción para iniciar la consulta:</p>
-        
+        <h2>Atención al Cliente</h2>
+        <p>Seleccione el área con la que desea comunicarse:</p>
         <div class="buttons-container">
-            <!-- Cada botón pasa un parámetro de negocio diferente -->
-            <button onclick="abrirChat('solicitud_bajas')">Solicitud de Bajas</button>
-            <button onclick="abrirChat('facturacion')">Detalles de Facturación</button>
-            <button onclick="abrirChat('soporte_tecnico')">Soporte Técnico</button>
+            <button onclick="iniciarChatEmbed('Soporte')">Soporte Técnico</button>
+            <button onclick="iniciarChatEmbed('Ventas')">Ventas</button>
+            <button onclick="iniciarChatEmbed('Facturacion')">Facturación</button>
         </div>
     </div>
 
-    <!-- Contenedor flotante para el Chat -->
-    <div id="chat-container">
-        <iframe id="chat-iframe" src="about:blank"></iframe>
-    </div>
+    <!-- Contenedor dinámico del script -->
+    <div id="ys-script-holder"></div>
 
-<script
-  src="https://chat.ysocial.net/js/embed.js"
-  data-server="https://chat.ysocial.net"
-  data-tenant="6dd8095ebd8f73e2b3159b5ac5cc2fbe9115af02"
-  data-service-id="031c90cb5ff043828915e0828e858916"
-  data-user-id="5492214009691"
-  data-user-name="Francisco Ermili"
-  data-user-phone="5492214009691"
-  async>
-</script>
+    <script>
+        function iniciarChatEmbed(departamento) {
+            const holder = document.getElementById('ys-script-holder');
+
+            // 1. Destruir script previo
+            holder.innerHTML = '';
+
+            // 2. Destruir cualquier elemento visual previo inyectado por ySocial en el DOM
+            const chatExistente = document.querySelectorAll('iframe[src*="ysocial"], div[id*="ysocial"], div[class*="ysocial"]');
+            chatExistente.forEach(el => el.remove());
+
+            // 3. Empaquetar datos de negocio (combina "datos" y "boton")
+            const businessData = JSON.stringify({
+                datos: "demo",
+                boton: departamento
+            });
+
+            // 4. Crear nuevo script con los datos correspondientes
+            const script = document.createElement('script');
+            script.src = "https://chat.ysocial.net/js/embed.js";
+            script.async = true;
+
+            script.setAttribute("data-server", "https://chat.ysocial.net");
+            script.setAttribute("data-tenant", "6dd8095ebd8f73e2b3159b5ac5cc2fbe9115af02");
+            script.setAttribute("data-service-id", "031c90cb5ff043828915e0828e858916");
+            
+            // Datos del usuario mapeados
+            script.setAttribute("data-user-id", "1001");
+            script.setAttribute("data-user-name", "Usuario Demo");
+            script.setAttribute("data-user-phone", "1111111111");
+            script.setAttribute("data-user-business-data", businessData);
+
+            // 5. Insertar en el DOM para forzar la inicialización
+            holder.appendChild(script);
+        }
+    </script>
 </body>
 </html>
