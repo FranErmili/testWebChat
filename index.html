@@ -3,80 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webchat Dinámico - embed.js (Con Limpieza)</title>
+    <title>Sucursal Virtual - Webchat Dinámico</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f4f6f8; }
-        .container { text-align: center; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .buttons-container { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
-        button { padding: 12px 20px; font-size: 15px; font-weight: bold; color: #fff; background-color: #007bff; border: none; border-radius: 6px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 22px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        #status-msg {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #28a745;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Atención al Cliente</h2>
-        <p>Seleccione el área con la que desea comunicarse:</p>
+        <h1>Sucursal Virtual</h1>
+        <p>Selecciona una opción para abrir o cambiar de área en el chat:</p>
+        
         <div class="buttons-container">
-            <button onclick="iniciarChatEmbed('Soporte')">Soporte Técnico</button>
-            <button onclick="iniciarChatEmbed('Ventas')">Ventas</button>
-            <button onclick="iniciarChatEmbed('Facturacion')">Facturación</button>
+            <button onclick="iniciarChat('Soporte')">Soporte Técnico</button>
+            <button onclick="iniciarChat('Ventas')">Ventas</button>
+            <button onclick="iniciarChat('Facturacion')">Facturación</button>
         </div>
+
+        <div id="status-msg"></div>
     </div>
 
-    <!-- Contenedor dinámico del script -->
+    <!-- Contenedor donde se insertará el script del chat -->
     <div id="ys-script-holder"></div>
 
     <script>
-        function iniciarChatEmbed(departamento) {
-            // 1. LIMPIEZA AGRESIVA DEL DOM Y MEMORIA
-            
-            // A) Eliminar cualquier tag <script> viejo de ySocial
+        function iniciarChat(departamento) {
+            const status = document.getElementById('status-msg');
+            const holder = document.getElementById('ys-script-holder');
+
+            status.textContent = `Iniciando chat con ${departamento}...`;
+
+            // 1. LIMPIEZA TOTAL: Destruir sesiones y elementos previos
+            // A) Eliminar scripts embed.js anteriores
             document.querySelectorAll('script[src*="embed.js"]').forEach(s => s.remove());
-            
-            // B) Eliminar todos los iframes y contenedores inyectados en el body
-            // Se buscan coincidencias amplias por si usan clases dinámicas (ysocial, yzn, etc.)
+
+            // B) Eliminar iframes o divs inyectados por ySocial en la pantalla
             document.querySelectorAll('iframe[src*="chat.ysocial.net"], div[id*="ysocial"], div[class*="ysocial"], div[id*="yzn"], div[class*="yzn"]').forEach(el => el.remove());
-            
-            // C) Borrar variables globales de memoria
-            // Esto le hace creer a embed.js que es la primera vez que carga en la página
+
+            // C) Borrar variables globales de memoria del widget
             if (window.YoizenChatEvents) delete window.YoizenChatEvents;
             if (window.YoizenChat) delete window.YoizenChat;
-            
-            // D) Vaciar nuestro propio contenedor por seguridad
-            const holder = document.getElementById('ys-script-holder');
+
+            // D) Vaciar el contenedor
             holder.innerHTML = '';
 
-            // 2. PAUSA E INYECCIÓN (Recrear la sesión limpia)
-            // Esperamos 300ms para asegurar que el navegador procesó la destrucción del DOM
+            // 2. REINICIAR CHAT TRAS LIMPIAR EL DOM
             setTimeout(() => {
-                const businessData = {
-                    boton: departamento
-                };
-
                 const script = document.createElement('script');
                 script.src = "https://chat.ysocial.net/js/embed.js";
                 script.async = true;
 
-                // Credenciales base
+                // Configuración del servicio
                 script.setAttribute("data-server", "https://chat.ysocial.net");
                 script.setAttribute("data-tenant", "6dd8095ebd8f73e2b3159b5ac5cc2fbe9115af02");
                 script.setAttribute("data-service-id", "031c90cb5ff043828915e0828e858916");
-                
-                // Datos del usuario (Autenticación Simple de prueba)
+
+                // Datos del usuario
                 script.setAttribute("data-user-id", "1001");
                 script.setAttribute("data-user-name", "Usuario Demo");
                 script.setAttribute("data-user-phone", "1111111111");
-                
-                // Parámetro clave que define la rama
-                script.setAttribute("data-user-business-data", businessData);
 
-                // Insertar el nuevo script
+                // Enviamos el departamento como texto plano para evitar comillas escapadas (\"...\")
+                script.setAttribute("data-user-business-data", departamento);
+
+                // Insertar el nuevo script en la página
                 holder.appendChild(script);
-                
-                console.log(`Chat reiniciado para el área: ${departamento}`);
+
+                status.textContent = `Área actual: ${departamento}`;
             }, 300);
         }
     </script>
+
 </body>
 </html>
