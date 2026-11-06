@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webchat Dinámico - embed.js</title>
+    <title>Webchat Dinámico - embed.js (Con Limpieza)</title>
     <style>
         body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f4f6f8; }
         .container { text-align: center; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -29,38 +29,54 @@
 
     <script>
         function iniciarChatEmbed(departamento) {
+            // 1. LIMPIEZA AGRESIVA DEL DOM Y MEMORIA
+            
+            // A) Eliminar cualquier tag <script> viejo de ySocial
+            document.querySelectorAll('script[src*="embed.js"]').forEach(s => s.remove());
+            
+            // B) Eliminar todos los iframes y contenedores inyectados en el body
+            // Se buscan coincidencias amplias por si usan clases dinámicas (ysocial, yzn, etc.)
+            document.querySelectorAll('iframe[src*="chat.ysocial.net"], div[id*="ysocial"], div[class*="ysocial"], div[id*="yzn"], div[class*="yzn"]').forEach(el => el.remove());
+            
+            // C) Borrar variables globales de memoria
+            // Esto le hace creer a embed.js que es la primera vez que carga en la página
+            if (window.YoizenChatEvents) delete window.YoizenChatEvents;
+            if (window.YoizenChat) delete window.YoizenChat;
+            
+            // D) Vaciar nuestro propio contenedor por seguridad
             const holder = document.getElementById('ys-script-holder');
-
-            // 1. Destruir script previo
             holder.innerHTML = '';
 
-            // 2. Destruir cualquier elemento visual previo inyectado por ySocial en el DOM
-            const chatExistente = document.querySelectorAll('iframe[src*="ysocial"], div[id*="ysocial"], div[class*="ysocial"]');
-            chatExistente.forEach(el => el.remove());
+            // 2. PAUSA E INYECCIÓN (Recrear la sesión limpia)
+            // Esperamos 300ms para asegurar que el navegador procesó la destrucción del DOM
+            setTimeout(() => {
+                const businessData = JSON.stringify({
+                    datos: "demo",
+                    boton: departamento
+                });
 
-            // 3. Empaquetar datos de negocio (combina "datos" y "boton")
-            const businessData = JSON.stringify({
-                datos: "demo",
-                boton: departamento
-            });
+                const script = document.createElement('script');
+                script.src = "https://chat.ysocial.net/js/embed.js";
+                script.async = true;
 
-            // 4. Crear nuevo script con los datos correspondientes
-            const script = document.createElement('script');
-            script.src = "https://chat.ysocial.net/js/embed.js";
-            script.async = true;
+                // Credenciales base
+                script.setAttribute("data-server", "https://chat.ysocial.net");
+                script.setAttribute("data-tenant", "6dd8095ebd8f73e2b3159b5ac5cc2fbe9115af02");
+                script.setAttribute("data-service-id", "031c90cb5ff043828915e0828e858916");
+                
+                // Datos del usuario (Autenticación Simple de prueba)
+                script.setAttribute("data-user-id", "1001");
+                script.setAttribute("data-user-name", "Usuario Demo");
+                script.setAttribute("data-user-phone", "1111111111");
+                
+                // Parámetro clave que define la rama
+                script.setAttribute("data-user-business-data", businessData);
 
-            script.setAttribute("data-server", "https://chat.ysocial.net");
-            script.setAttribute("data-tenant", "6dd8095ebd8f73e2b3159b5ac5cc2fbe9115af02");
-            script.setAttribute("data-service-id", "031c90cb5ff043828915e0828e858916");
-            
-            // Datos del usuario mapeados
-            script.setAttribute("data-user-id", "1001");
-            script.setAttribute("data-user-name", "Usuario Demo");
-            script.setAttribute("data-user-phone", "1111111111");
-            script.setAttribute("data-user-business-data", businessData);
-
-            // 5. Insertar en el DOM para forzar la inicialización
-            holder.appendChild(script);
+                // Insertar el nuevo script
+                holder.appendChild(script);
+                
+                console.log(`Chat reiniciado para el área: ${departamento}`);
+            }, 300);
         }
     </script>
 </body>
